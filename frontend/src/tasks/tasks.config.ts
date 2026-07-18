@@ -1,21 +1,139 @@
 export type TaskType = "static" | "fakeChat" | "comparison" | "realChat" | "chatIde";
 export type Difficulty = "easy" | "medium" | "hard";
 
+export interface StaticContent {
+  pages: string[];
+}
+export interface ComparisonPair {
+  bad: string;
+  good: string;
+  note: string;
+}
+export interface ComparisonPage {
+  title: string;
+  pairs: ComparisonPair[];
+}
+export interface ComparisonContent {
+  pages: ComparisonPage[];
+}
+export interface FakeChatContent {
+  prompt: string;
+  reply: string;
+}
+
+export type TaskContent =
+  | StaticContent
+  | ComparisonContent
+  | FakeChatContent
+  | null;
+
 export interface Task {
   id: string;
   type: TaskType;
   difficulty?: Difficulty;
   title: string;
   unlocksAfter: string | null;
-  content: null;
+  content: TaskContent;
 }
 
 export const tasks: Task[] = [
-  { id: "intro-1", type: "static", title: "Что такое языковая модель", unlocksAfter: null, content: null },
-  { id: "intro-2", type: "static", title: "Откуда берутся галлюцинации", unlocksAfter: "intro-1", content: null },
-  { id: "intro-3", type: "comparison", title: "Человек против модели", unlocksAfter: "intro-2", content: null },
-  { id: "t1", type: "fakeChat", difficulty: "easy", title: "Первый диалог с ИИ", unlocksAfter: "intro-3", content: null },
-  { id: "t2", type: "static", difficulty: "easy", title: "Анатомия промпта", unlocksAfter: "t1", content: null },
+  {
+    id: "intro-1",
+    type: "static",
+    title: "Что такое языковая модель",
+    unlocksAfter: null,
+    content: {
+      pages: [
+        "Языковая модель — это программа, которая угадывает следующее слово в тексте. Она прочитала огромный кусок интернета и теперь может продолжать фразы, отвечать на вопросы и даже писать код. Но «понимает» ли она хоть что-то — открытый вопрос. В следующих заданиях разберёмся, как с ней разговаривать и где ей верить, а где проверять.",
+      ],
+    },
+  },
+  {
+    id: "intro-2",
+    type: "static",
+    title: "Откуда берутся галлюцинации",
+    unlocksAfter: "intro-1",
+    content: {
+      pages: [
+        "В химической промышленности ИИ уже берёт на себя часть решений, которые раньше требовали инженера: подбор составов, прогноз реакций, поиск дефектов на спектрах. Не потому, что он умнее, — потому что реже ошибается на рутинных задачах и не устаёт. Грамотный человек рядом с такой моделью отвечает не за «как посчитать», а за «где проверить». Умение отличить правдоподобный ответ от верного — навык, который уже ценится в деньгах.",
+      ],
+    },
+  },
+  {
+    id: "intro-3",
+    type: "comparison",
+    title: "Человек против модели",
+    unlocksAfter: "intro-2",
+    content: {
+      pages: [
+        {
+          title: "С точки зрения ИИ",
+          pairs: [
+            {
+              bad: "напиши код",
+              good: "напиши функцию на Python, которая принимает список чисел и возвращает их сумму. Добавь docstring и один тест на пустой список.",
+              note: "Модель без контекста угадывает требования. С контекстом — решает конкретную задачу.",
+            },
+            {
+              bad: "расскажи про базы данных",
+              good: "Объясни разницу между SQL и NoSQL так, будто я знаю Python, но никогда не работал с БД. Приведи по одному примеру запроса.",
+              note: "Указание уровня и фона даёт ответ нужной глубины, без воды.",
+            },
+            {
+              bad: "почему не работает",
+              good: "Вот код и ошибка 'TypeError: NoneType'. Должен возвращать список, но возвращает None. Найди, где теряется значение.",
+              note: "Конкретные данные и симптом > абстрактная жалоба.",
+            },
+          ],
+        },
+        {
+          title: "С точки зрения карьеры и этики",
+          pairs: [
+            {
+              bad: "напиши курсовую целиком и не говори, что использовал ИИ",
+              good: "помоги разобраться в теме так, чтобы я сам написал курсовую. Объясни ключевые понятия и дай план, который я буду раскрывать своими словами.",
+              note: "ИИ как напарник в обучении, а не заменитель тебя.",
+            },
+            {
+              bad: "сделай за меня домашку, препод не поймёт",
+              good: "проверь моё решение домашки и укажи, где я ошибся в рассуждениях. Финальный ответ я перепишу сам.",
+              note: "Честность перед собой важнее незаслуженной пятёрки.",
+            },
+            {
+              bad: "напиши рекламу, которая преувеличивает эффект",
+              good: "напиши описание продукта на основе реальных характеристик. Не добавляй того, чего продукт не делает.",
+              note: "Репутация и доверие дороже разовой конверсии.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    id: "t1",
+    type: "fakeChat",
+    difficulty: "easy",
+    title: "Первый диалог с ИИ",
+    unlocksAfter: "intro-3",
+    content: {
+      prompt: "Напиши короткое эссе от лица зелёного желе-кубика о том, почему он любит зелёный цвет. Тон — восторженный, 3–4 предложения.",
+      reply: "Зелёный — это не просто цвет, это я сам! Когда архаичная планета спросила меня, кем я хочу быть, я не задумался ни на секунду: конечно, цветом весны, цвета свежих листьев и светофора, который кричит «иди!». Зелёный не боится ошибок — он пробуется снова и снова, как первый росток сквозь асфальт. И если уж кубику желе суждено сдать тест на архаичной планете, пусть это будет зелёный тест.",
+    },
+  },
+  {
+    id: "t2",
+    type: "static",
+    difficulty: "easy",
+    title: "Анатомия промпта",
+    unlocksAfter: "t1",
+    content: {
+      pages: [
+        "Желе-кубик не понимает, как думает его помощник. Он задаёт вопрос — получает ответ. Но «понимает» ли ИИ смысл слов? Спойлер: нет. Он угадывает следующее слово по статистике, как попугай, прочитавший всю библиотеку.",
+        "Угадывание делает не один механизм, а миллиарды параметров — чисел, подобранных в ходе обучения. Каждый параметр — как крошечный голос, голосующий за то, какое слово вероятнее. Вместе они складываются в ответ, который звучит осмысленно, даже когда модель ошибается.",
+        "Именно поэтому модель галлюцинирует: она не отличает факт от правдоподобия. Она знает, как звучит правда, но не знает, что правда. Желе-кубику остаётся одно — проверять. И уметь задавать вопросы так, чтобы ошибок было меньше, чем правдоподобной чепухи.",
+      ],
+    },
+  },
   { id: "t3", type: "realChat", difficulty: "medium", title: "Живой разговор", unlocksAfter: "t2", content: null },
   { id: "t4", type: "comparison", difficulty: "medium", title: "Две модели, один вопрос", unlocksAfter: "t3", content: null },
   { id: "t5", type: "chatIde", difficulty: "hard", title: "IDE-ассистент: автодополнение", unlocksAfter: "t4", content: null },
@@ -31,3 +149,11 @@ export const roadmapStubs: string[] = [
   "Prompt Chaining",
   "Self-Consistency",
 ];
+
+export function findTask(id: string): Task | undefined {
+  return tasks.find((t) => t.id === id);
+}
+
+export function nextTaskAfter(id: string): Task | undefined {
+  return tasks.find((t) => t.unlocksAfter === id);
+}

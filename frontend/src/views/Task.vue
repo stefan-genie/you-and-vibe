@@ -1,41 +1,58 @@
+<script setup>
+import { computed } from "vue";
+import { useRoute } from "vue-router";
+import { findTask } from "../tasks/tasks.config";
+import TaskShell from "../components/TaskShell.vue";
+import StaticInfoBlock from "../components/StaticInfoBlock.vue";
+import ComparisonBlock from "../components/ComparisonBlock.vue";
+import FakeChatBlock from "../components/FakeChatBlock.vue";
+
+const route = useRoute();
+const task = computed(() => findTask(route.params.id));
+</script>
+
 <template>
-  <main class="stub">
-    <p class="tag">/ task</p>
-    <h1>Скоро</h1>
-    <p class="note">TODO — фаза 5+</p>
-    <RouterLink to="/" class="back">← на главную</RouterLink>
-  </main>
+  <div v-if="!task">
+    <main class="missing">
+      <p>Задание не найдено.</p>
+      <RouterLink to="/profile" class="back">← К списку заданий</RouterLink>
+    </main>
+  </div>
+  <TaskShell v-else :task="task" #default="{ pass }">
+    <StaticInfoBlock
+      v-if="task.type === 'static'"
+      :content="task.content"
+      :pass="pass"
+    />
+    <ComparisonBlock
+      v-else-if="task.type === 'comparison'"
+      :content="task.content"
+      :pass="pass"
+    />
+    <FakeChatBlock
+      v-else-if="task.type === 'fakeChat'"
+      :content="task.content"
+      :pass="pass"
+    />
+    <p v-else class="todo">Этот тип задания появится в следующих фазах.</p>
+  </TaskShell>
 </template>
 
 <style scoped>
-.stub {
-  height: 100dvh;
+.missing {
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding: 0 clamp(1.5rem, 8vw, 6rem);
-  max-width: 40rem;
-}
-.tag {
+  gap: 1rem;
   color: var(--text-dim);
-  font-size: 0.9rem;
-  margin-bottom: 0.75rem;
-}
-.stub h1 {
-  font-size: clamp(2.5rem, 6vw, 4rem);
-  letter-spacing: -0.03em;
-  margin-bottom: 0.75rem;
-}
-.note {
-  color: var(--accent);
-  font-size: 1.05rem;
-  margin-bottom: 2rem;
 }
 .back {
-  color: var(--text-dim);
-  transition: color 0.15s ease;
+  color: var(--accent);
 }
-.back:hover {
-  color: var(--text);
+.todo {
+  color: var(--text-dim);
+  font-size: 1rem;
 }
 </style>
