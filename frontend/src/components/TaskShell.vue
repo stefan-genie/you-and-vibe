@@ -43,8 +43,14 @@ function handlePass() {
     store.completed.push(props.task.id);
   }
   emit("pass");
-  spriteEvent.value = "pass";
-  showCongrats.value = true;
+  spriteEvent.value = null;
+  requestAnimationFrame(() => {
+    spriteEvent.value = "pass";
+  });
+  showCongrats.value = false;
+  requestAnimationFrame(() => {
+    showCongrats.value = true;
+  });
 }
 
 function onCongratsDone() {

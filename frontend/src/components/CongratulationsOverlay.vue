@@ -7,16 +7,22 @@ const props = defineProps({
 const emit = defineEmits(["done"]);
 
 const show = ref(false);
+let timer = null;
 
 watch(
   () => props.visible,
-  (v, oldV) => {
-    if (v && !oldV) {
-      show.value = true;
-      setTimeout(() => {
-        show.value = false;
-        emit("done");
-      }, 1900);
+  (v) => {
+    if (timer) { clearTimeout(timer); timer = null; }
+    if (v) {
+      show.value = false;
+      requestAnimationFrame(() => {
+        show.value = true;
+        timer = setTimeout(() => {
+          show.value = false;
+          emit("done");
+          timer = null;
+        }, 1900);
+      });
     }
   }
 );
