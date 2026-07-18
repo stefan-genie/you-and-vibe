@@ -21,8 +21,12 @@ const task = computed(() => findTask(route.params.id));
     </main>
   </div>
   <TaskShell v-else :task="task" #default="{ pass }">
+    <div v-if="task.content === null" class="not-ready">
+      <p>Это задание появится в следующих фазах.</p>
+      <RouterLink to="/profile" class="back-link">← К списку заданий</RouterLink>
+    </div>
     <StaticInfoBlock
-      v-if="task.type === 'static'"
+      v-else-if="task.type === 'static'"
       :content="task.content"
       :pass="pass"
     />
@@ -66,5 +70,16 @@ const task = computed(() => findTask(route.params.id));
 .todo {
   color: var(--text-dim);
   font-size: 1rem;
+}
+.not-ready {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  color: var(--text-dim);
+  font-size: 1rem;
+  padding: 2rem 0;
+}
+.back-link {
+  color: var(--accent);
 }
 </style>

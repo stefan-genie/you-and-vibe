@@ -42,7 +42,10 @@ function handlePass() {
 <template>
   <main class="shell">
     <header class="head">
-      <button class="back" @click="goBack">← Назад</button>
+      <div class="head-row">
+        <button class="back" @click="goBack">← Назад</button>
+        <RouterLink to="/profile" class="home">Профиль</RouterLink>
+      </div>
       <div class="meta">
         <span class="idx">{{ currentIndex }} / {{ total }}</span>
         <span v-if="task.difficulty" :class="['badge', task.difficulty]">
@@ -70,6 +73,12 @@ function handlePass() {
 .head {
   margin-bottom: 2rem;
 }
+.head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
 .back {
   background: transparent;
   border: none;
@@ -78,11 +87,18 @@ function handlePass() {
   font-size: 0.9rem;
   cursor: pointer;
   padding: 0;
-  margin-bottom: 1.25rem;
   transition: color 0.15s ease;
 }
 .back:hover {
   color: var(--text);
+}
+.home {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  transition: color 0.15s ease;
+}
+.home:hover {
+  color: var(--accent);
 }
 .meta {
   display: flex;
