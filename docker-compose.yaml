@@ -30,8 +30,10 @@ services:
   runner:
     build: ./sandbox/runner-image
     image: sandbox-runner:latest
-    profiles:
-      - build-only
+    networks:
+      - jelly-net
+    command: ["echo", "runner image built; not a long-running service"]
+    restart: "no"
 
 networks:
   default:
