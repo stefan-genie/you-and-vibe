@@ -53,5 +53,4 @@ watch(() => props.state, loadSprite, { immediate: true });
 </template>
 
 <style scoped>
-@import "../styles/sprite.css";
 </style>
