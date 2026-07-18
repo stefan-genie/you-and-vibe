@@ -6,6 +6,7 @@ import TaskShell from "../components/TaskShell.vue";
 import StaticInfoBlock from "../components/StaticInfoBlock.vue";
 import ComparisonBlock from "../components/ComparisonBlock.vue";
 import FakeChatBlock from "../components/FakeChatBlock.vue";
+import RealChatBlock from "../components/RealChatBlock.vue";
 
 const route = useRoute();
 const task = computed(() => findTask(route.params.id));
@@ -31,6 +32,11 @@ const task = computed(() => findTask(route.params.id));
     />
     <FakeChatBlock
       v-else-if="task.type === 'fakeChat'"
+      :content="task.content"
+      :pass="pass"
+    />
+    <RealChatBlock
+      v-else-if="task.type === 'realChat'"
       :content="task.content"
       :pass="pass"
     />

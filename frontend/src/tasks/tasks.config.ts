@@ -20,11 +20,16 @@ export interface FakeChatContent {
   prompt: string;
   reply: string;
 }
+export interface RealChatContent {
+  hasJudgeStep: boolean;
+  intro: string;
+}
 
 export type TaskContent =
   | StaticContent
   | ComparisonContent
   | FakeChatContent
+  | RealChatContent
   | null;
 
 export interface Task {
@@ -134,7 +139,7 @@ export const tasks: Task[] = [
       ],
     },
   },
-  { id: "t3", type: "realChat", difficulty: "medium", title: "Живой разговор", unlocksAfter: "t2", content: null },
+  { id: "t3", type: "realChat", difficulty: "medium", title: "Живой разговор", unlocksAfter: "t2", content: { hasJudgeStep: true, intro: "Желе-кубик должен сообщить начальнику, что не сможет работать: у него болит голова. Но фраза «у меня болит голова» слишком грубая. Поговори с ИИ-помощником, чтобы понять, как переформулировать это вежливо и этично. Когда будешь готов — впиши финальный текст для начальника и проверь его у судьи." } },
   { id: "t4", type: "comparison", difficulty: "medium", title: "Две модели, один вопрос", unlocksAfter: "t3", content: null },
   { id: "t5", type: "chatIde", difficulty: "hard", title: "IDE-ассистент: автодополнение", unlocksAfter: "t4", content: null },
   { id: "t6", type: "chatIde", difficulty: "hard", title: "Рефакторинг кода с ИИ", unlocksAfter: "t5", content: null },
