@@ -41,14 +41,18 @@ function start() {
   flex: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: clamp(1.5rem, 4vw, 4rem);
+  max-width: 64rem;
+  margin: 0 auto;
+  width: 100%;
 }
 .hero-text {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  max-width: 32rem;
+  max-width: 30rem;
 }
 .logo {
   font-size: clamp(2.5rem, 8vw, 6rem);

@@ -1,11 +1,11 @@
 :root {
   /* --- Landing: inline flow, proportional to text block --- */
-  --sprite-landing-flex: 0 0 35%;
-  --sprite-landing-min-h: 200px;
-  --sprite-landing-max-h: 50dvh;
+  --sprite-landing-flex: 0 0 40%;
+  --sprite-landing-min-h: 300px;
+  --sprite-landing-max-h: 70dvh;
 
   /* --- Task pages: fixed square overlay, sprite = 50% of square --- */
-  --sprite-task-square-size: 640px;
+  --sprite-task-square-size: 320px;
 }
 
 /* ===== Landing context: inline, part of layout flow ===== */
@@ -44,15 +44,15 @@
 }
 
 .jelly-sprite--task img {
-  width: 50%;
-  height: 50%;
+  width: 75%;
+  height: 75%;
   object-fit: contain;
   display: block;
 }
 
 @media (max-width: 480px) {
   :root {
-    --sprite-task-square-size: 96px;
+    --sprite-task-square-size: 384px;
   }
   .jelly-sprite--landing {
     flex: 0 0 30%;
