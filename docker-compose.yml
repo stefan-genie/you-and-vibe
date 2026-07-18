@@ -1,0 +1,30 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    networks:
+      - default
+
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    networks:
+      - default
+      - jelly-net
+
+  jelly-service:
+    build: ./sandbox/jelly-service
+    ports:
+      - "8080:8080"
+    networks:
+      - default
+      - jelly-net
+
+networks:
+  default:
+    driver: bridge
+  jelly-net:
+    internal: true
+    driver: bridge
