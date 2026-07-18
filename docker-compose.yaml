@@ -8,6 +8,7 @@ services:
 
   backend:
     build: ./backend
+    env_file: .env
     expose:
       - "3000"
     volumes:
@@ -17,6 +18,7 @@ services:
       - JELLY_NETWORK=jelly-net
       - RUNNER_IMAGE=sandbox-runner:latest
       - SANDBOX_TMP_BASE=/tmp/vibe-sandbox
+      - ACCESS_CODE_SECRET=${ACCESS_CODE_SECRET}
     networks:
       - default
       - jelly-net
