@@ -47,6 +47,7 @@ export interface Task {
   title: string;
   unlocksAfter: string | null;
   content: TaskContent;
+  showSprite?: boolean;
 }
 
 export const tasks: Task[] = [

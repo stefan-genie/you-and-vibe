@@ -1,0 +1,27 @@
+:root {
+  --sprite-size: 128px;
+  --sprite-offset-x: 0;
+  --sprite-offset-y: 0;
+  --sprite-position: static;
+}
+
+.jelly-sprite {
+  width: var(--sprite-size);
+  height: var(--sprite-size);
+  margin-left: var(--sprite-offset-x);
+  margin-top: var(--sprite-offset-y);
+  position: var(--sprite-position);
+  pointer-events: none;
+  user-select: none;
+}
+
+.jelly-sprite img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.jelly-sprite.fading {
+  transition: opacity 0.3s ease;
+}

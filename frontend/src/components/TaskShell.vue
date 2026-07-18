@@ -4,6 +4,8 @@ import { useRouter } from "vue-router";
 import { useProgressStore } from "../stores/progress.js";
 import { tasks, nextTaskAfter } from "../tasks/tasks.config";
 import CongratulationsOverlay from "./CongratulationsOverlay.vue";
+import JellySprite from "./JellySprite.vue";
+import { spriteForTask, spriteForEvent } from "../tasks/spriteConfig";
 
 const props = defineProps({
   task: { type: Object, required: true },
@@ -14,6 +16,11 @@ const router = useRouter();
 const store = useProgressStore();
 
 const showCongrats = ref(false);
+const spriteEvent = ref(null);
+
+const showSprite = computed(() => props.task.showSprite !== false);
+const baseSprite = computed(() => spriteForTask(props.task.id, props.task.type));
+const spriteState = computed(() => spriteForEvent(spriteEvent.value, baseSprite.value));
 
 const currentIndex = computed(
   () => tasks.findIndex((t) => t.id === props.task.id) + 1
@@ -36,11 +43,13 @@ function handlePass() {
     store.completed.push(props.task.id);
   }
   emit("pass");
+  spriteEvent.value = "pass";
   showCongrats.value = true;
 }
 
 function onCongratsDone() {
   showCongrats.value = false;
+  spriteEvent.value = null;
   const next = nextTaskAfter(props.task.id);
   if (next) router.push(`/task/${next.id}`);
   else router.push("/profile");
@@ -49,6 +58,7 @@ function onCongratsDone() {
 
 <template>
   <main class="shell">
+    <JellySprite v-if="showSprite" :state="spriteState" class="task-sprite" />
     <header class="head">
       <div class="head-row">
         <button class="back" @click="goBack">← Назад</button>
@@ -79,6 +89,10 @@ function onCongratsDone() {
   padding: 2.5rem clamp(1.5rem, 5vw, 3rem) 4rem;
   display: flex;
   flex-direction: column;
+}
+.task-sprite {
+  align-self: flex-end;
+  margin-bottom: -1rem;
 }
 .head {
   margin-bottom: 2rem;

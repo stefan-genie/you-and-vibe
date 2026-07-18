@@ -1,6 +1,7 @@
 <script setup>
 import { useRouter } from "vue-router";
 import { hasAccessCode } from "../utils/access.js";
+import JellySprite from "../components/JellySprite.vue";
 const router = useRouter();
 
 function start() {
@@ -11,6 +12,7 @@ function start() {
 <template>
   <main class="landing">
     <section class="hero">
+      <JellySprite state="landing" class="hero-sprite" />
       <h1 class="logo">Vibe<span class="amp">&</span>You</h1>
       <p class="lede">
         Большие языковые модели насчитывают триллионы параметров —<br />
@@ -39,6 +41,9 @@ function start() {
   flex-direction: column;
   justify-content: center;
   max-width: 40rem;
+}
+.hero-sprite {
+  margin-bottom: 1.5rem;
 }
 .logo {
   font-size: clamp(3rem, 9vw, 6.5rem);
