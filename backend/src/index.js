@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { rateLimit } from "./middleware/rateLimit.js";
 import { chatHandler } from "./routes/chat.js";
+import { sandboxRunHandler } from "./routes/sandbox.js";
 
 const app = express();
 app.use(express.json());
@@ -16,6 +17,7 @@ app.use(cors({ origin: allowedOrigins }));
 app.use(rateLimit);
 
 app.post("/api/chat", chatHandler);
+app.post("/api/sandbox/run", sandboxRunHandler);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

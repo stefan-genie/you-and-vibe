@@ -11,6 +11,13 @@ services:
     env_file: .env
     ports:
       - "3000:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/vibe-sandbox:/tmp/vibe-sandbox
+    environment:
+      - JELLY_NETWORK=jelly-net
+      - RUNNER_IMAGE=sandbox-runner:latest
+      - SANDBOX_TMP_BASE=/tmp/vibe-sandbox
     networks:
       - default
       - jelly-net
@@ -23,9 +30,17 @@ services:
       - default
       - jelly-net
 
+  runner:
+    build: ./sandbox/runner-image
+    image: sandbox-runner:latest
+    profiles:
+      - build-only
+
 networks:
   default:
+    name: vibe-default
     driver: bridge
   jelly-net:
+    name: jelly-net
     internal: true
     driver: bridge
