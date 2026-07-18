@@ -1,15 +1,15 @@
 services:
   frontend:
     build: ./frontend
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     networks:
       - default
 
   backend:
     build: ./backend
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/vibe-sandbox:/tmp/vibe-sandbox
