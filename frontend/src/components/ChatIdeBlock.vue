@@ -1,7 +1,8 @@
 <script setup>
 import { ref, nextTick, watch, onMounted, computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import AttemptsCounter from "./AttemptsCounter.vue";
+import { authHeaders, handle401 } from "../utils/access.js";
 
 const props = defineProps({
   content: { type: Object, required: true },
@@ -9,6 +10,7 @@ const props = defineProps({
 });
 
 const route = useRoute();
+const router = useRouter();
 const taskId = route.params.id;
 const mode = computed(() => props.content.mode || "generate");
 const isFixMode = computed(() => mode.value === "fix");
@@ -79,9 +81,10 @@ async function send() {
   try {
     const resp = await fetch("/api/chat", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ taskId, message: text, history: buildHistory().slice(0, -1) }),
     });
+    if (await handle401(resp, router)) return;
     const data = await resp.json();
     if (!resp.ok || data.error) {
       chatError.value = data.error || "Не удалось получить ответ.";
@@ -118,9 +121,10 @@ async function runCode() {
   try {
     const resp = await fetch("/api/sandbox/run", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ code: generatedCode.value, taskId }),
     });
+    if (await handle401(resp, router)) return;
     const data = await resp.json();
     if (!resp.ok || data.error) {
       runResult.value = {

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, nextTick } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import { authHeaders, handle401 } from "../utils/access.js";
 
 const props = defineProps({
   content: { type: Object, required: true },
@@ -8,6 +9,7 @@ const props = defineProps({
 });
 
 const route = useRoute();
+const router = useRouter();
 const taskId = route.params.id;
 
 const messages = ref([]);
@@ -49,9 +51,10 @@ async function send() {
   try {
     const resp = await fetch("/api/chat", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ taskId, message: text, history: buildHistory().slice(0, -1) }),
     });
+    if (await handle401(resp, router)) return;
     const data = await resp.json();
     if (!resp.ok || data.error) {
       chatError.value = data.error || "Не удалось получить ответ.";
@@ -84,9 +87,10 @@ async function checkJudge() {
   try {
     const resp = await fetch("/api/judge", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify({ taskId, text }),
     });
+    if (await handle401(resp, router)) return;
     const data = await resp.json();
     if (!resp.ok || data.error) {
       judgeError.value = data.error || "Не удалось проверить.";

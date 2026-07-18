@@ -1,6 +1,11 @@
 <script setup>
 import { useRouter } from "vue-router";
+import { hasAccessCode } from "../utils/access.js";
 const router = useRouter();
+
+function start() {
+  router.push(hasAccessCode() ? "/profile" : "/access");
+}
 </script>
 
 <template>
@@ -11,7 +16,7 @@ const router = useRouter();
         Большие языковые модели насчитывают триллионы параметров —<br />
         но всё ещё путаются в счёте букв слова «strawberry».
       </p>
-      <button class="cta" @click="router.push('/profile')">
+      <button class="cta" @click="start">
         Начать изучать <span class="arrow">→</span>
       </button>
     </section>
