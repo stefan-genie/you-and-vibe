@@ -1,8 +1,8 @@
 :root {
   /* --- Landing: inline flow, proportional to text block --- */
-  --sprite-landing-flex: 0 0 40%;
-  --sprite-landing-min-h: 300px;
-  --sprite-landing-max-h: 70dvh;
+  --sprite-landing-flex: 0 0 50%;
+  --sprite-landing-min-h: 400px;
+  --sprite-landing-max-h: 90dvh;
 
   /* --- Task pages: fixed square overlay, sprite = 50% of square --- */
   --sprite-task-square-size: 320px;
