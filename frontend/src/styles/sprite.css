@@ -5,7 +5,7 @@
   --sprite-landing-max-h: 50dvh;
 
   /* --- Task pages: fixed square overlay, sprite = 50% of square --- */
-  --sprite-task-square-size: 160px;
+  --sprite-task-square-size: 640px;
 }
 
 /* ===== Landing context: inline, part of layout flow ===== */
