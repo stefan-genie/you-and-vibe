@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { generateCode } from "../src/accessCodes.js";
 
 const count = parseInt(process.argv[2], 10);

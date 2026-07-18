@@ -8,18 +8,20 @@
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-const ACCESS_CODE_SECRET = process.env.ACCESS_CODE_SECRET;
-
-if (!ACCESS_CODE_SECRET) {
-  console.warn("WARNING: ACCESS_CODE_SECRET is not set — access codes will not validate.");
-}
-
 const TTL_SECONDS = 48 * 3600;
 const CLOCK_SKEW_SECONDS = 60;
 const SIG_LENGTH = 22;
 
+function getSecret() {
+  const secret = process.env.ACCESS_CODE_SECRET;
+  if (!secret) {
+    throw new Error("ACCESS_CODE_SECRET is not set — check .env");
+  }
+  return secret;
+}
+
 export function sign(tsSeconds) {
-  const hmac = createHmac("sha256", ACCESS_CODE_SECRET)
+  const hmac = createHmac("sha256", getSecret())
     .update(String(tsSeconds))
     .digest("base64url");
   return hmac.slice(0, SIG_LENGTH);
@@ -31,9 +33,13 @@ export function generateCode() {
 }
 
 export function verifyCode(code) {
-  if (!ACCESS_CODE_SECRET) {
+  let secret;
+  try {
+    secret = getSecret();
+  } catch {
     return { ok: false, reason: "bad_signature" };
   }
+
   if (typeof code !== "string" || code.length === 0) {
     return { ok: false, reason: "malformed" };
   }
@@ -51,7 +57,10 @@ export function verifyCode(code) {
     return { ok: false, reason: "malformed" };
   }
 
-  const expected = sign(ts);
+  const expected = createHmac("sha256", secret)
+    .update(String(ts))
+    .digest("base64url")
+    .slice(0, SIG_LENGTH);
   const expectedBuf = Buffer.from(expected);
   const providedBuf = Buffer.from(sigPart);
 

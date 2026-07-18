@@ -11,11 +11,14 @@ import { accessVerifyHandler } from "./routes/access.js";
 const app = express();
 app.use(express.json());
 
-const allowedOrigins = ["http://localhost:5173"];
-if (process.env.FRONTEND_ORIGIN) {
-  allowedOrigins.push(process.env.FRONTEND_ORIGIN);
+function getAllowedOrigins() {
+  const origins = ["http://localhost:5173"];
+  if (process.env.FRONTEND_ORIGIN) {
+    origins.push(process.env.FRONTEND_ORIGIN);
+  }
+  return origins;
 }
-app.use(cors({ origin: allowedOrigins }));
+app.use(cors({ origin: getAllowedOrigins() }));
 
 app.use(rateLimit);
 
