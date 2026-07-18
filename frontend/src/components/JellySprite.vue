@@ -17,15 +17,15 @@ const props = defineProps({
 
 // TODO: replace missing sprite PNGs (calm, happy, sad, sick, puzzled) with real assets.
 // Until then, only landing.png exists — others gracefully render nothing.
-const spriteModules = import.meta.glob("../assets/sprites/*.png", { eager: true, import: "default" });
+const spriteModules = import.meta.glob("../assets/sprites/*.webp", { eager: true, import: "default" });
 
 const SPRITE_PATHS = {
-  landing: "../assets/sprites/landing.png",
-  calm: "../assets/sprites/calm.png",
-  happy: "../assets/sprites/happy.png",
-  sad: "../assets/sprites/sad.png",
-  sick: "../assets/sprites/sick.png",
-  puzzled: "../assets/sprites/puzzled.png",
+  landing: "../assets/sprites/landing.webp",
+  calm: "../assets/sprites/calm.webp",
+  happy: "../assets/sprites/happy.webp",
+  sad: "../assets/sprites/sad.webp",
+  sick: "../assets/sprites/sick.webp",
+  puzzled: "../assets/sprites/puzzled.webp",
 };
 
 const src = ref("");
