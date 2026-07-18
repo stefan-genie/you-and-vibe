@@ -18,7 +18,7 @@ const RESULT_RE = /RESULT_STATUS:\s*(-?\d+)/;
 // <code> is the HTTP status code observed by the generated code. runInSandbox
 // parses this marker to decide pass/fail.
 
-export async function runInSandbox(code) {
+export async function runInSandbox(code, taskId = null) {
   if (typeof code !== "string" || code.length === 0) {
     return {
       passed: false,
