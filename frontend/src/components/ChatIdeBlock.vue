@@ -151,8 +151,20 @@ async function runCode() {
 }
 
 function copyErrorLog() {
-  const text = `Код:\n${props.content.brokenCode || ""}\n\nЛог ошибки:\n${props.content.errorLog || ""}`;
+  const text = `${props.content.brokenCode || ""}\n\nЛог:\n${props.content.errorLog || ""}`;
   navigator.clipboard?.writeText(text);
+}
+
+function copyServiceUrl() {
+  const url = props.content.serviceUrl || "";
+  if (url) navigator.clipboard?.writeText(url);
+}
+
+const urlCopied = ref(false);
+function onCopyUrl() {
+  copyServiceUrl();
+  urlCopied.value = true;
+  setTimeout(() => { urlCopied.value = false; }, 1500);
 }
 
 const helpContext = computed(() => {
@@ -178,7 +190,12 @@ function onPassed() {
     #default="{ attempts, max, failed }"
   >
     <article class="ide">
-      <p class="intro">{{ content.intro }}</p>
+      <p class="intro">
+        <span>{{ content.introBeforeUrl }}</span>
+        <code v-if="content.serviceUrl" class="service-url" @click="onCopyUrl" title="Нажми, чтобы скопировать">{{ content.serviceUrl }}</code>
+        <span v-if="urlCopied" class="copied-hint">скопировано ✓</span>
+        <span>{{ content.introAfterUrl }}</span>
+      </p>
 
       <div class="layout">
         <div class="col chat-col">
@@ -269,6 +286,24 @@ function onPassed() {
   color: var(--text-dim);
   font-size: 0.95rem;
   line-height: 1.6;
+}
+.service-url {
+  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-size: 0.88rem;
+  color: var(--accent);
+  background: rgba(251, 191, 36, 0.08);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.service-url:hover {
+  background: rgba(251, 191, 36, 0.16);
+}
+.copied-hint {
+  font-size: 0.8rem;
+  color: #4ade80;
+  margin-left: 0.4rem;
 }
 .layout {
   display: grid;
