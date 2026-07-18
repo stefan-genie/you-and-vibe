@@ -58,7 +58,7 @@ function onCongratsDone() {
 
 <template>
   <main class="shell">
-    <JellySprite v-if="showSprite" :state="spriteState" class="task-sprite" />
+    <JellySprite v-if="showSprite" :state="spriteState" context="task" />
     <header class="head">
       <div class="head-row">
         <button class="back" @click="goBack">← Назад</button>
@@ -89,10 +89,6 @@ function onCongratsDone() {
   padding: 2.5rem clamp(1.5rem, 5vw, 3rem) 4rem;
   display: flex;
   flex-direction: column;
-}
-.task-sprite {
-  align-self: flex-end;
-  margin-bottom: -1rem;
 }
 .head {
   margin-bottom: 2rem;

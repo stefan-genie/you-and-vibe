@@ -1,27 +1,61 @@
 :root {
-  --sprite-size: 128px;
-  --sprite-offset-x: 0;
-  --sprite-offset-y: 0;
-  --sprite-position: static;
+  /* --- Landing: inline flow, proportional to text block --- */
+  --sprite-landing-flex: 0 0 35%;
+  --sprite-landing-min-h: 200px;
+  --sprite-landing-max-h: 50dvh;
+
+  /* --- Task pages: fixed square overlay, sprite = 50% of square --- */
+  --sprite-task-square-size: 160px;
 }
 
-.jelly-sprite {
-  width: var(--sprite-size);
-  height: var(--sprite-size);
-  margin-left: var(--sprite-offset-x);
-  margin-top: var(--sprite-offset-y);
-  position: var(--sprite-position);
+/* ===== Landing context: inline, part of layout flow ===== */
+.jelly-sprite--landing {
+  flex: var(--sprite-landing-flex);
+  min-height: var(--sprite-landing-min-h);
+  max-height: var(--sprite-landing-max-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
   user-select: none;
 }
 
-.jelly-sprite img {
+.jelly-sprite--landing img {
   width: 100%;
   height: 100%;
+  max-height: var(--sprite-landing-max-h);
   object-fit: contain;
   display: block;
 }
 
-.jelly-sprite.fading {
-  transition: opacity 0.3s ease;
+/* ===== Task context: fixed top-right square, sprite centered at 50% ===== */
+.jelly-sprite--task {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: var(--sprite-task-square-size);
+  height: var(--sprite-task-square-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  user-select: none;
+  z-index: 10;
+}
+
+.jelly-sprite--task img {
+  width: 50%;
+  height: 50%;
+  object-fit: contain;
+  display: block;
+}
+
+@media (max-width: 480px) {
+  :root {
+    --sprite-task-square-size: 96px;
+  }
+  .jelly-sprite--landing {
+    flex: 0 0 30%;
+    min-height: 120px;
+  }
 }

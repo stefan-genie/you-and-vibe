@@ -12,15 +12,17 @@ function start() {
 <template>
   <main class="landing">
     <section class="hero">
-      <JellySprite state="landing" class="hero-sprite" />
-      <h1 class="logo">Vibe<span class="amp">&</span>You</h1>
-      <p class="lede">
-        Большие языковые модели насчитывают триллионы параметров —<br />
-        но всё ещё путаются в счёте букв слова «strawberry».
-      </p>
-      <button class="cta" @click="start">
-        Начать изучать <span class="arrow">→</span>
-      </button>
+      <div class="hero-text">
+        <h1 class="logo">Vibe<span class="amp">&</span>You</h1>
+        <p class="lede">
+          Большие языковые модели насчитывают триллионы параметров —<br />
+          но всё ещё путаются в счёте букв слова «strawberry».
+        </p>
+        <button class="cta" @click="start">
+          Начать изучать <span class="arrow">→</span>
+        </button>
+      </div>
+      <JellySprite state="landing" context="landing" class="hero-sprite" />
     </section>
     <footer class="contacts">
       <a href="mailto:hello@vibeandyou.dev">hello@vibeandyou.dev</a>
@@ -38,15 +40,18 @@ function start() {
 .hero {
   flex: 1;
   display: flex;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 4rem);
+}
+.hero-text {
+  flex: 1;
+  display: flex;
   flex-direction: column;
   justify-content: center;
-  max-width: 40rem;
-}
-.hero-sprite {
-  margin-bottom: 1.5rem;
+  max-width: 32rem;
 }
 .logo {
-  font-size: clamp(3rem, 9vw, 6.5rem);
+  font-size: clamp(2.5rem, 8vw, 6rem);
   font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1;
@@ -57,11 +62,11 @@ function start() {
   margin: 0 0.05em;
 }
 .lede {
-  font-size: clamp(1rem, 2.2vw, 1.35rem);
+  font-size: clamp(0.95rem, 2vw, 1.3rem);
   color: var(--text-dim);
   line-height: 1.6;
   margin-bottom: 2.5rem;
-  max-width: 32rem;
+  max-width: 28rem;
 }
 .cta {
   display: inline-flex;
@@ -77,6 +82,7 @@ function start() {
   border-radius: 999px;
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease;
+  align-self: flex-start;
 }
 .cta:hover {
   transform: translateY(-2px);
@@ -99,5 +105,18 @@ function start() {
 }
 .contacts a:hover {
   color: var(--accent);
+}
+@media (max-width: 640px) {
+  .hero {
+    flex-direction: column;
+    justify-content: center;
+    gap: 1rem;
+  }
+  .hero-text {
+    max-width: 100%;
+  }
+  .hero-sprite {
+    order: -1;
+  }
 }
 </style>

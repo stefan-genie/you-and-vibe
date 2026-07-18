@@ -8,6 +8,11 @@ const props = defineProps({
     validator: (v) =>
       ["landing", "calm", "happy", "sad", "sick", "puzzled"].includes(v),
   },
+  context: {
+    type: String,
+    default: "task",
+    validator: (v) => ["landing", "task"].includes(v),
+  },
 });
 
 // TODO: replace missing sprite PNGs (calm, happy, sad, sick, puzzled) with real assets.
@@ -42,7 +47,7 @@ watch(() => props.state, loadSprite, { immediate: true });
 </script>
 
 <template>
-  <div v-if="loaded" class="jelly-sprite">
+  <div v-if="loaded" :class="['jelly-sprite', `jelly-sprite--${context}`]">
     <img :src="src" :alt="`Желе-кубик: ${state}`" />
   </div>
 </template>
