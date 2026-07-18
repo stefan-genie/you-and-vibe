@@ -43,43 +43,58 @@ export async function chatHandler(req, res) {
     { role: "user", content: message },
   ];
 
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: MAX_TOKENS,
-        messages,
-      }),
-    });
+  const body = JSON.stringify({ model, max_tokens: MAX_TOKENS, messages });
+  const headers = {
+    "content-type": "application/json",
+    authorization: `Bearer ${apiKey}`,
+  };
 
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: `Upstream model error (${response.status}). Please try again.`,
+  const MAX_RETRIES = 2;
+  const RETRY_DELAYS = [2000, 4000];
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body,
       });
-    }
 
-    const data = await response.json();
-    const choice = data?.choices?.[0];
-    const content = choice?.message?.content;
-    if (typeof content !== "string") {
-      return res
-        .status(502)
-        .json({ error: "Upstream model returned an unexpected response." });
-    }
+      if (response.status === 429 && attempt < MAX_RETRIES) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAYS[attempt]));
+        continue;
+      }
 
-    const { code, reply } = extractCode(content);
-    const payload = { content };
-    if (code !== null) {
-      payload.code = code;
-      payload.reply = reply;
+      if (!response.ok) {
+        const msg =
+          response.status === 429
+            ? "Слишком много запросов к ИИ. Подожди минуту и попробуй снова."
+            : `Ошибка ИИ (${response.status}). Попробуй ещё раз.`;
+        return res.status(response.status).json({ error: msg });
+      }
+
+      const data = await response.json();
+      const choice = data?.choices?.[0];
+      const content = choice?.message?.content;
+      if (typeof content !== "string") {
+        return res
+          .status(502)
+          .json({ error: "Upstream model returned an unexpected response." });
+      }
+
+      const { code, reply } = extractCode(content);
+      const payload = { content };
+      if (code !== null) {
+        payload.code = code;
+        payload.reply = reply;
+      }
+      return res.json(payload);
+    } catch (err) {
+      if (attempt < MAX_RETRIES) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAYS[attempt]));
+        continue;
+      }
+      return res.status(502).json({ error: "Не удалось связаться с ИИ-сервером." });
     }
-    return res.json(payload);
-  } catch (err) {
-    return res.status(502).json({ error: "Failed to reach corporate AI upstream." });
   }
 }
