@@ -1,8 +1,9 @@
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useProgressStore } from "../stores/progress.js";
 import { tasks, nextTaskAfter } from "../tasks/tasks.config";
+import CongratulationsOverlay from "./CongratulationsOverlay.vue";
 
 const props = defineProps({
   task: { type: Object, required: true },
@@ -11,6 +12,8 @@ const emit = defineEmits(["pass"]);
 
 const router = useRouter();
 const store = useProgressStore();
+
+const showCongrats = ref(false);
 
 const currentIndex = computed(
   () => tasks.findIndex((t) => t.id === props.task.id) + 1
@@ -33,6 +36,11 @@ function handlePass() {
     store.completed.push(props.task.id);
   }
   emit("pass");
+  showCongrats.value = true;
+}
+
+function onCongratsDone() {
+  showCongrats.value = false;
   const next = nextTaskAfter(props.task.id);
   if (next) router.push(`/task/${next.id}`);
   else router.push("/profile");
@@ -58,6 +66,8 @@ function handlePass() {
     <section class="body">
       <slot :pass="handlePass" />
     </section>
+
+    <CongratulationsOverlay :visible="showCongrats" @done="onCongratsDone" />
   </main>
 </template>
 
