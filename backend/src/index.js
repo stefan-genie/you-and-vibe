@@ -23,6 +23,7 @@ app.use(cors({ origin: getAllowedOrigins() }));
 app.use(rateLimit);
 
 app.post("/api/access/verify", accessVerifyHandler);
+app.get("/api/health", (req, res) => res.json({ ok: true }));
 app.post("/api/chat", requireAccessCode, chatHandler);
 app.post("/api/sandbox/run", requireAccessCode, sandboxRunHandler);
 app.post("/api/judge", requireAccessCode, judgeHandler);

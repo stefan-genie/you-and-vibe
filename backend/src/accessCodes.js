@@ -5,8 +5,13 @@
 // without a database is impossible — the only way to invalidate all codes at
 // once is to change ACCESS_CODE_SECRET. This is acceptable for an MVP with a
 // single admin issuing codes via CLI.
+//
+// CODE FORMAT: <ts.base36>.<nonce.base36>.<sig.base64url-22>
+//   ts    — Unix seconds at generation time
+//   nonce — random 6-char base36 string (ensures uniqueness within same second)
+//   sig   — HMAC-SHA256(secret, "ts.nonce"), truncated to 22 base64url chars
 
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual, randomInt } from "node:crypto";
 
 const TTL_SECONDS = 48 * 3600;
 const CLOCK_SKEW_SECONDS = 60;
@@ -20,16 +25,22 @@ function getSecret() {
   return secret;
 }
 
-export function sign(tsSeconds) {
-  const hmac = createHmac("sha256", getSecret())
-    .update(String(tsSeconds))
-    .digest("base64url");
-  return hmac.slice(0, SIG_LENGTH);
+function sign(payload) {
+  return createHmac("sha256", getSecret())
+    .update(payload)
+    .digest("base64url")
+    .slice(0, SIG_LENGTH);
+}
+
+function randomNonce() {
+  return randomInt(0, 2_176_782_336).toString(36).padStart(6, "0");
 }
 
 export function generateCode() {
   const ts = Math.floor(Date.now() / 1000);
-  return `${ts.toString(36)}.${sign(ts)}`;
+  const nonce = randomNonce();
+  const payload = `${ts.toString(36)}.${nonce}`;
+  return `${payload}.${sign(payload)}`;
 }
 
 export function verifyCode(code) {
@@ -44,21 +55,20 @@ export function verifyCode(code) {
     return { ok: false, reason: "malformed" };
   }
 
-  const dot = code.indexOf(".");
-  if (dot < 1 || dot === code.length - 1) {
+  const parts = code.split(".");
+  if (parts.length !== 3) {
     return { ok: false, reason: "malformed" };
   }
 
-  const tsPart = code.slice(0, dot);
-  const sigPart = code.slice(dot + 1);
-
+  const [tsPart, noncePart, sigPart] = parts;
   const ts = parseInt(tsPart, 36);
   if (Number.isNaN(ts)) {
     return { ok: false, reason: "malformed" };
   }
 
+  const payload = `${tsPart}.${noncePart}`;
   const expected = createHmac("sha256", secret)
-    .update(String(ts))
+    .update(payload)
     .digest("base64url")
     .slice(0, SIG_LENGTH);
   const expectedBuf = Buffer.from(expected);

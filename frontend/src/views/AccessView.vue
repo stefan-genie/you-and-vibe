@@ -42,7 +42,19 @@ async function submit() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ code: trimmed }),
     });
-    const data = await resp.json();
+
+    const text = await resp.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      if (resp.status === 502 || resp.status === 503) {
+        error.value = "Сервер недоступен (502). Проверьте, запущен ли backend.";
+      } else {
+        error.value = `Сервер вернул неожиданный ответ (${resp.status}).`;
+      }
+      return;
+    }
 
     if (data.ok) {
       setAccessCode(trimmed);
@@ -51,7 +63,7 @@ async function submit() {
       error.value = REASON_LABELS[data.reason] || "Код неверный.";
     }
   } catch {
-    error.value = "Не удалось связаться с сервером.";
+    error.value = "Сеть недоступна — проверьте подключение.";
   } finally {
     busy.value = false;
   }
