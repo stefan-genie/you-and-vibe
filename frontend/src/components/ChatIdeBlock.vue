@@ -1,6 +1,7 @@
 <script setup>
-import { ref, nextTick, watch, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { ref, nextTick, watch, onMounted, computed } from "vue";
+import { useRoute } from "vue-router";
+import AttemptsCounter from "./AttemptsCounter.vue";
 
 const props = defineProps({
   content: { type: Object, required: true },
@@ -8,26 +9,26 @@ const props = defineProps({
 });
 
 const route = useRoute();
-const router = useRouter();
 const taskId = route.params.id;
+const mode = computed(() => props.content.mode || "generate");
+const isFixMode = computed(() => mode.value === "fix");
 
 const messages = ref([]);
 const input = ref("");
 const chatBusy = ref(false);
 const chatError = ref("");
 
-const generatedCode = ref("");
+const generatedCode = ref(isFixMode.value ? props.content.brokenCode || "" : "");
 const codeReply = ref("");
 const codeBlock = ref(null);
+const codeReplaced = ref(false);
 
 const runResult = ref(null);
 const runBusy = ref(false);
-const attempts = ref(0);
-const failed = ref(false);
+
+const counter = ref(null);
 
 const MAX_ATTEMPTS = 3;
-const CLAUDE_PROMPT = `Мне нужно написать Python-скрипт, который делает GET-запрос к http://jelly-service:8080/jelly/status через библиотеку requests и печатает последней строкой RESULT_STATUS:<HTTP-статус>. Мой скрипт не проходит проверку — помоги понять, почему. Вот что я пробовал и что получил в выводе:`;
-
 const chatWindow = ref(null);
 
 async function scrollToBottom() {
@@ -59,6 +60,12 @@ function buildHistory() {
     .map((m) => ({ role: m.role, content: m.content }));
 }
 
+const chatPlaceholder = computed(() =>
+  isFixMode.value
+    ? "Попроси ИИ починить код…"
+    : "Попроси ИИ написать скрипт…"
+);
+
 async function send() {
   const text = input.value.trim();
   if (!text || chatBusy.value) return;
@@ -84,6 +91,7 @@ async function send() {
       if (data.code) {
         generatedCode.value = data.code;
         codeReply.value = data.reply || "Готово, смотри код →";
+        codeReplaced.value = true;
       }
     }
   } catch {
@@ -95,8 +103,14 @@ async function send() {
   }
 }
 
+const canRun = computed(() => {
+  if (runBusy.value) return false;
+  if (isFixMode.value && !codeReplaced.value) return false;
+  return generatedCode.value.length > 0;
+});
+
 async function runCode() {
-  if (!generatedCode.value || runBusy.value || failed.value) return;
+  if (!canRun.value) return;
 
   runResult.value = null;
   runBusy.value = true;
@@ -118,15 +132,7 @@ async function runCode() {
     } else {
       runResult.value = data;
     }
-
-    if (runResult.value.passed) {
-      props.pass();
-    } else {
-      attempts.value++;
-      if (attempts.value >= MAX_ATTEMPTS) {
-        failed.value = true;
-      }
-    }
+    counter.value?.registerResult(runResult.value.passed);
   } catch {
     runResult.value = {
       passed: false,
@@ -134,113 +140,119 @@ async function runCode() {
       stdout: "",
       stderr: "Сеть недоступна.",
     };
-    attempts.value++;
-    if (attempts.value >= MAX_ATTEMPTS) {
-      failed.value = true;
-    }
+    counter.value?.registerResult(false);
   } finally {
     runBusy.value = false;
   }
 }
 
-function copyPrompt() {
-  const full = `${CLAUDE_PROMPT}\n\nКод:\n${generatedCode.value}\n\nВывод:\n${runResult.value?.stdout || runResult.value?.stderr || "(пусто)"}`;
-  navigator.clipboard?.writeText(full);
+function copyErrorLog() {
+  const text = `Код:\n${props.content.brokenCode || ""}\n\nЛог ошибки:\n${props.content.errorLog || ""}`;
+  navigator.clipboard?.writeText(text);
 }
 
-const externalHelperUrl = "https://claude.ai";
+const helpContext = computed(() => {
+  const base = isFixMode.value
+    ? "Мне нужно починить Python-скрипт, который делает GET-запрос к http://jelly-service:8080/jelly/status через requests и печатает RESULT_STATUS:<HTTP-статус>. Скрипт возвращает 404 вместо 200."
+    : "Мне нужно написать Python-скрипт, который делает GET-запрос к http://jelly-service:8080/jelly/status через библиотеку requests и печатает последней строкой RESULT_STATUS:<HTTP-статус>. Мой скрипт не проходит проверку.";
+  return `${base}\n\nКод:\n${generatedCode.value}\n\nВывод:\n${runResult.value?.stdout || runResult.value?.stderr || "(пусто)"}`;
+});
+
+function onPassed() {
+  props.pass();
+}
 </script>
 
 <template>
-  <article v-if="!failed" class="ide">
-    <p class="intro">{{ content.intro }}</p>
+  <AttemptsCounter
+    ref="counter"
+    :task-id="taskId"
+    :max="MAX_ATTEMPTS"
+    :hints="content.hints"
+    :help-context="helpContext"
+    @passed="onPassed"
+    #default="{ attempts, max, failed }"
+  >
+    <article class="ide">
+      <p class="intro">{{ content.intro }}</p>
 
-    <div class="layout">
-      <div class="col chat-col">
-        <div class="col-header">Чат с ИИ</div>
-        <div ref="chatWindow" class="chat-window">
-          <div
-            v-for="(m, i) in messages"
-            :key="i"
-            :class="['row', m.role]"
-          >
-            <span class="who">{{ m.role === "user" ? "Ты" : "ИИ" }}</span>
-            <p :class="['bubble', m.role === 'assistant' ? 'ai-bubble' : '']">{{ m.content }}</p>
+      <div class="layout">
+        <div class="col chat-col">
+          <div class="col-header">Чат с ИИ</div>
+          <div ref="chatWindow" class="chat-window">
+            <div
+              v-for="(m, i) in messages"
+              :key="i"
+              :class="['row', m.role]"
+            >
+              <span class="who">{{ m.role === "user" ? "Ты" : "ИИ" }}</span>
+              <p :class="['bubble', m.role === 'assistant' ? 'ai-bubble' : '']">{{ m.content }}</p>
+            </div>
+            <div v-if="chatBusy" class="row assistant">
+              <span class="who">ИИ</span>
+              <p class="bubble ai-bubble typing">
+                <span class="dot" /><span class="dot" /><span class="dot" />
+              </p>
+            </div>
           </div>
-          <div v-if="chatBusy" class="row assistant">
-            <span class="who">ИИ</span>
-            <p class="bubble ai-bubble typing">
-              <span class="dot" /><span class="dot" /><span class="dot" />
-            </p>
+          <div class="composer">
+            <textarea
+              v-model="input"
+              class="input"
+              :placeholder="chatPlaceholder"
+              rows="2"
+              :disabled="chatBusy"
+              @keydown.enter.exact.prevent="send"
+            />
+            <button class="btn" :disabled="chatBusy || !input.trim()" @click="send">
+              {{ chatBusy ? "…" : "Отправить" }}
+            </button>
           </div>
         </div>
-        <div class="composer">
-          <textarea
-            v-model="input"
-            class="input"
-            placeholder="Попроси ИИ написать скрипт…"
-            rows="2"
-            :disabled="chatBusy"
-            @keydown.enter.exact.prevent="send"
-          />
-          <button class="btn" :disabled="chatBusy || !input.trim()" @click="send">
-            {{ chatBusy ? "…" : "Отправить" }}
+
+        <div class="col code-col">
+          <div class="col-header">
+            {{ isFixMode && !codeReplaced ? "Сломанный код" : "Код" }}
+          </div>
+          <div class="code-window">
+            <pre v-if="generatedCode" class="code-wrap"><code ref="codeBlock" class="language-python">{{ generatedCode }}</code></pre>
+            <div v-else class="code-empty">
+              Код появится здесь, когда ИИ его сгенерирует.
+            </div>
+          </div>
+
+          <div v-if="isFixMode && !codeReplaced && content.errorLog" class="error-log">
+            <div class="error-log-head">
+              <span class="col-header">Лог ошибки</span>
+              <button class="copy-btn" @click="copyErrorLog">Скопировать</button>
+            </div>
+            <pre class="error-log-output">{{ content.errorLog }}</pre>
+          </div>
+
+          <button
+            class="btn run-btn"
+            :disabled="!canRun"
+            @click="runCode"
+          >
+            {{ runBusy ? "Запускаю…" : "Запустить" }}
           </button>
         </div>
       </div>
 
-      <div class="col code-col">
-        <div class="col-header">Код</div>
-        <div class="code-window">
-          <pre v-if="generatedCode" class="code-wrap"><code ref="codeBlock" class="language-python">{{ generatedCode }}</code></pre>
-          <div v-else class="code-empty">
-            Код появится здесь, когда ИИ его сгенерирует.
-          </div>
+      <div v-if="runResult" :class="['console', runResult.passed ? 'ok' : 'fail']">
+        <div class="console-head">
+          <span class="verdict">
+            {{ runResult.passed ? "✓ Зачёт" : "✗ Не прошло" }}
+          </span>
+          <span v-if="runResult.statusCode !== null" class="status-code">
+            HTTP {{ runResult.statusCode }}
+          </span>
+          <span class="attempts">Попытка {{ attempts }}/{{ max }}</span>
         </div>
-        <button
-          class="btn run-btn"
-          :disabled="!generatedCode || runBusy || failed"
-          @click="runCode"
-        >
-          {{ runBusy ? "Запускаю…" : "Запустить" }}
-        </button>
+        <pre class="console-output">{{ runResult.stdout || runResult.stderr || "(пусто)" }}</pre>
       </div>
-    </div>
-
-    <div v-if="runResult" :class="['console', runResult.passed ? 'ok' : 'fail']">
-      <div class="console-head">
-        <span class="verdict">
-          {{ runResult.passed ? "✓ Зачёт" : "✗ Не прошло" }}
-        </span>
-        <span v-if="runResult.statusCode !== null" class="status-code">
-          HTTP {{ runResult.statusCode }}
-        </span>
-        <span class="attempts">Попытка {{ attempts }}/{{ MAX_ATTEMPTS }}</span>
-      </div>
-      <pre class="console-output">{{ runResult.stdout || runResult.stderr || "(пусто)" }}</pre>
-      <p v-if="!runResult.passed && attempts < MAX_ATTEMPTS && content.hints[attempts - 1]" class="hint">
-        💡 {{ content.hints[attempts - 1] }}
-      </p>
-    </div>
-  </article>
-
-  <article v-else class="failed-screen">
-    <h2>Не получилось</h2>
-    <p class="fail-text">Ты исчерпал {{ MAX_ATTEMPTS }} попытки. Это нормально — ИИ-ассистенты не всегда угадывают с первого раза.</p>
-    <div class="fail-actions">
-      <RouterLink to="/profile" class="btn secondary">Повторить предыдущие задания</RouterLink>
-      <a
-        :href="externalHelperUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="btn"
-        @click="copyPrompt"
-      >
-        Попроси своего ИИ-помощника объяснить ↗
-      </a>
-    </div>
-    <p class="copy-note">Промпт скопирован в буфер обмена — вставь его в открывшемся окне.</p>
-  </article>
+    </article>
+  </AttemptsCounter>
 </template>
 
 <style scoped>
@@ -361,8 +373,8 @@ const externalHelperUrl = "https://claude.ai";
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 1rem;
-  min-height: 16rem;
-  max-height: 24rem;
+  min-height: 12rem;
+  max-height: 20rem;
   overflow: auto;
 }
 .code-wrap {
@@ -377,7 +389,41 @@ const externalHelperUrl = "https://claude.ai";
   align-items: center;
   justify-content: center;
   height: 100%;
-  min-height: 14rem;
+  min-height: 10rem;
+}
+.error-log {
+  background: rgba(248, 113, 113, 0.06);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+.error-log-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+.copy-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.copy-btn:hover {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+.error-log-output {
+  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-size: 0.8rem;
+  color: #f87171;
+  white-space: pre-wrap;
+  margin: 0;
 }
 .btn {
   background: var(--accent);
@@ -400,11 +446,6 @@ const externalHelperUrl = "https://claude.ai";
   background: var(--bg-elev);
   color: var(--text-dim);
   cursor: not-allowed;
-}
-.btn.secondary {
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--border);
 }
 .run-btn {
   align-self: flex-start;
@@ -448,41 +489,6 @@ const externalHelperUrl = "https://claude.ai";
   white-space: pre-wrap;
   word-break: break-word;
   margin: 0;
-}
-.hint {
-  margin-top: 0.5rem;
-  color: var(--accent);
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-.failed-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding: 3rem 1rem;
-  text-align: center;
-}
-.failed-screen h2 {
-  font-size: 1.75rem;
-  letter-spacing: -0.02em;
-}
-.fail-text {
-  color: var(--text-dim);
-  max-width: 28rem;
-  line-height: 1.6;
-}
-.fail-actions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 0.5rem;
-}
-.copy-note {
-  color: var(--text-dim);
-  font-size: 0.82rem;
-  margin-top: 0.5rem;
 }
 @media (max-width: 720px) {
   .layout {

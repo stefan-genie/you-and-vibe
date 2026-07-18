@@ -25,8 +25,11 @@ export interface RealChatContent {
   intro: string;
 }
 export interface ChatIdeContent {
+  mode: "generate" | "fix";
   intro: string;
   hints: string[];
+  brokenCode?: string;
+  errorLog?: string;
 }
 
 export type TaskContent =
@@ -146,8 +149,8 @@ export const tasks: Task[] = [
   },
   { id: "t3", type: "realChat", difficulty: "medium", title: "Живой разговор", unlocksAfter: "t2", content: { hasJudgeStep: true, intro: "Желе-кубик должен сообщить начальнику, что не сможет работать: у него болит голова. Но фраза «у меня болит голова» слишком грубая. Поговори с ИИ-помощником, чтобы понять, как переформулировать это вежливо и этично. Когда будешь готов — впиши финальный текст для начальника и проверь его у судьи." } },
   { id: "t4", type: "comparison", difficulty: "medium", title: "Две модели, один вопрос", unlocksAfter: "t3", content: null },
-  { id: "t5", type: "chatIde", difficulty: "hard", title: "IDE-ассистент: автодополнение", unlocksAfter: "t4", content: { intro: "Желе устал(о) в конце дня. Его HTTP-сервис уже поднят по адресу http://jelly-service:8080/jelly/status. Попроси ИИ-ассистента в IDE написать скрипт-проверку: он должен сделать GET-запрос к сервису и напечатать статус ответа. Когда код появится справа — нажми «Запустить».", hints: ["Уточни ИИ, что нужно вывести именно HTTP-статус кодом, а не текст ответа.", "Дай ИИ конкретный URL (http://jelly-service:8080/jelly/status) и скажи, что последняя строка должна быть RESULT_STATUS:<код>.", "Попроси ИИ обработать таймаут и добавить timeout=5 в requests.get."] } },
-  { id: "t6", type: "chatIde", difficulty: "hard", title: "Рефакторинг кода с ИИ", unlocksAfter: "t5", content: null },
+  { id: "t5", type: "chatIde", difficulty: "hard", title: "IDE-ассистент: автодополнение", unlocksAfter: "t4", content: { mode: "generate", intro: "Желе устал(о) в конце дня. Его HTTP-сервис уже поднят по адресу http://jelly-service:8080/jelly/status. Попроси ИИ-ассистента в IDE написать скрипт-проверку: он должен сделать GET-запрос к сервису и напечатать статус ответа. Когда код появится справа — нажми «Запустить».", hints: ["Уточни ИИ, что нужно вывести именно HTTP-статус кодом, а не текст ответа.", "Дай ИИ конкретный URL (http://jelly-service:8080/jelly/status) и скажи, что последняя строка должна быть RESULT_STATUS:<код>.", "Попроси ИИ обработать таймаут и добавить timeout=5 в requests.get."] } },
+  { id: "t6", type: "chatIde", difficulty: "hard", title: "Рефакторинг кода с ИИ", unlocksAfter: "t5", content: { mode: "fix", intro: "Желе-кубик написал скрипт-проверку сервиса, но он не работает — возвращается 404 вместо 200. Исходный код и лог ошибки уже видны справа. Попроси ИИ-ассистента починить код, затем нажми «Запустить» на исправленной версии.", hints: ["Посмотри на URL в коде — нет ли там опечатки.", "Сравни URL в скрипте с реальным адресом сервиса: http://jelly-service:8080/jelly/status.", "Попроси ИИ проверить путь в requests.get — лишняя буква в конце даёт 404."], brokenCode: "import requests\nr = requests.get(\"http://jelly-service:8080/jelly/statuss\")\nprint(f\"RESULT_STATUS:{r.status_code}\")", errorLog: "RESULT_STATUS:404" } },
 ];
 
 export const roadmapStubs: string[] = [
